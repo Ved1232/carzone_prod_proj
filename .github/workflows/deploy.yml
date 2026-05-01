@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to AWS ECR
+name: Build, Push and Deploy Docker Image to AWS ECR
 
 on:
   push:
@@ -15,8 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  build-and-push:
-    name: Build and Push to ECR
+  build-push-deploy:
+    name: Build, Push and Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
@@ -52,8 +52,35 @@ jobs:
           docker push ${{ steps.vars.outputs.image_uri }}:${{ steps.vars.outputs.image_tag }}
           docker push ${{ steps.vars.outputs.image_uri }}:latest
 
-      - name: Print pushed image
+      - name: Deploy latest image on EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 236195543546.dkr.ecr.eu-west-1.amazonaws.com
+
+            docker pull ${{ steps.vars.outputs.image_uri }}:latest
+
+            docker rm -f carzone_app || true
+
+            docker run -d \
+              -p 8000:8000 \
+              --name carzone_app \
+              --link carzone_db:db \
+              -e SECRET_KEY='${{ secrets.SECRET_KEY }}' \
+              -e DEBUG=False \
+              -e ALLOWED_HOSTS='*' \
+              -e DB_NAME=carzone_db \
+              -e DB_USER=carzone_user \
+              -e DB_PASSWORD=StrongPassword123 \
+              -e DB_HOST=db \
+              -e DB_PORT=5432 \
+              ${{ steps.vars.outputs.image_uri }}:latest
+
+      - name: Print deployed image
         run: |
-          echo "Pushed image:"
+          echo "Deployed image:"
           echo "${{ steps.vars.outputs.image_uri }}:${{ steps.vars.outputs.image_tag }}"
           echo "${{ steps.vars.outputs.image_uri }}:latest"
