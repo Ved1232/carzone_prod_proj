@@ -23,6 +23,16 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Debug AWS role secret
+        run: |
+          echo "Checking AWS role secret..."
+          if [ -z "${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}" ]; then
+            echo "ERROR: AWS_GITHUB_ACTIONS_ROLE_ARN is empty"
+            exit 1
+          else
+            echo "AWS_GITHUB_ACTIONS_ROLE_ARN exists"
+          fi
+
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
