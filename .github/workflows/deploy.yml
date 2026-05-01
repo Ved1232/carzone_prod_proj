@@ -11,7 +11,6 @@ env:
   ECR_REPOSITORY: carzone-django
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
@@ -23,20 +22,11 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Debug AWS role secret
-        run: |
-          echo "Checking AWS role secret..."
-          if [ -z "${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}" ]; then
-            echo "ERROR: AWS_GITHUB_ACTIONS_ROLE_ARN is empty"
-            exit 1
-          else
-            echo "AWS_GITHUB_ACTIONS_ROLE_ARN exists"
-          fi
-
-      - name: Configure AWS credentials using OIDC
+      - name: Configure AWS credentials using access keys
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
