@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/',include('accounts.urls')),
     path('socialaccounts/', include('allauth.urls')),
     path('contacts/',include('contacts.urls')),
+    path("", include("django_prometheus.urls")),
 
 
 ] + static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
